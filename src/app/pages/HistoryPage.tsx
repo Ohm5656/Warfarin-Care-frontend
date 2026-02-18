@@ -1,20 +1,91 @@
 import { useState, useMemo } from "react";
-import { ArrowLeft, Filter, Calendar, TrendingUp, Award } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, MapPin, Activity, CheckCircle2, AlertCircle, AlertTriangle, Pill, FileText, ClipboardList } from "lucide-react";
 import { useNavigate } from "react-router";
+import { 
+  format, 
+  startOfMonth, 
+  endOfMonth, 
+  startOfWeek, 
+  endOfWeek, 
+  eachDayOfInterval, 
+  isSameMonth, 
+  isSameDay, 
+  addMonths, 
+  subMonths,
+  isToday
+} from "date-fns";
+import { th } from "date-fns/locale";
+import { motion, AnimatePresence } from "motion/react";
 
-// Mock history data
-const mockHistory = [
-  { id: 1, date: "2024-03-14", value: 2.7, status: "safe" },
-  { id: 2, date: "2024-03-07", value: 2.4, status: "safe" },
-  { id: 3, date: "2024-02-29", value: 2.6, status: "safe" },
-  { id: 4, date: "2024-02-22", value: 2.5, status: "safe" },
-  { id: 5, date: "2024-02-15", value: 2.8, status: "safe" },
-  { id: 6, date: "2024-02-08", value: 2.3, status: "safe" },
-  { id: 7, date: "2024-02-01", value: 2.1, status: "safe" },
-  { id: 8, date: "2024-01-25", value: 3.2, status: "monitor" },
-  { id: 9, date: "2024-01-18", value: 2.9, status: "safe" },
-  { id: 10, date: "2024-01-11", value: 1.8, status: "monitor" },
-];
+// Extended Mock Data Structure
+interface DailyLog {
+  date: string;
+  inr?: {
+    value: number;
+    status: "safe" | "monitor" | "danger";
+    note?: string;
+  };
+  medication?: {
+    status: "taken" | "missed" | "pending";
+    dose: string; // e.g., "3 mg (1 tablet)"
+    time?: string;
+    note?: string;
+  };
+  appointment?: {
+    time: string;
+    type: string;
+    location: string;
+    note?: string;
+  };
+  doctorNote?: string;
+}
+
+// Mock Data Generation
+const generateMockData = (): DailyLog[] => {
+  return [
+    {
+      date: "2026-02-14",
+      inr: { value: 2.7, status: "safe", note: "คุมอาหารได้ดี" },
+      medication: { status: "taken", dose: "3 mg", time: "20:00" },
+      doctorNote: "ผลเลือดดีมาก ให้ทานยาขนาดเดิมต่อไป"
+    },
+    {
+      date: "2026-02-13",
+      medication: { status: "taken", dose: "3 mg", time: "20:05" }
+    },
+    {
+      date: "2026-02-12",
+      medication: { status: "taken", dose: "3 mg", time: "19:55" }
+    },
+    {
+      date: "2026-02-11",
+      medication: { status: "taken", dose: "3 mg", time: "20:00" }
+    },
+    {
+      date: "2026-02-10",
+      inr: { value: 1.8, status: "monitor", note: "ต่ำกว่าเกณฑ์เล็กน้อย" },
+      medication: { status: "missed", dose: "3 mg", note: "ลืมทานยาเนื่องจากติดธุระ" },
+      doctorNote: "ระวังเรื่องการลืมทานยา อาจทำให้ค่า INR ตกได้"
+    },
+    {
+      date: "2026-02-21",
+      appointment: { time: "09:00", type: "checkup", location: "คลินิกวาร์ฟาริน ชั้น 2", note: "เจาะเลือดปลายนิ้ว และพบแพทย์" },
+      medication: { status: "pending", dose: "3 mg" } // Future date
+    },
+    {
+      date: "2026-02-18", // Today
+      medication: { status: "pending", dose: "3 mg" },
+      doctorNote: "วันนี้งดทานผักใบเขียวจัด"
+    },
+    {
+      date: "2026-02-07",
+      inr: { value: 2.4, status: "safe", note: "ปกติ" },
+      medication: { status: "taken", dose: "3 mg", time: "20:10" }
+    }
+  ];
+};
+
+const mockData = generateMockData();
 
 function getStatusInfo(status: string) {
   switch (status) {
@@ -22,191 +93,367 @@ function getStatusInfo(status: string) {
       return { 
         label: "ปลอดภัย", 
         color: "#10b981", 
-        bgColor: "#d1fae5",
-        gradient: "linear-gradient(135deg, #10b981 0%, #34d399 100%)"
+        bgColor: "bg-emerald-100",
+        textColor: "text-emerald-700",
+        icon: CheckCircle2,
       };
     case "monitor":
       return { 
         label: "ติดตาม", 
         color: "#f59e0b", 
-        bgColor: "#fef3c7",
-        gradient: "linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)"
+        bgColor: "bg-amber-100",
+        textColor: "text-amber-700",
+        icon: AlertTriangle,
       };
     case "danger":
       return { 
         label: "อันตราย", 
         color: "#ef4444", 
-        bgColor: "#fee2e2",
-        gradient: "linear-gradient(135deg, #ef4444 0%, #f87171 100%)"
+        bgColor: "bg-red-100",
+        textColor: "text-red-700",
+        icon: AlertCircle,
       };
     default:
       return { 
-        label: "ไม่ทราบ", 
+        label: "-", 
         color: "#6b7280", 
-        bgColor: "#f3f4f6",
-        gradient: "linear-gradient(135deg, #6b7280 0%, #9ca3af 100%)"
+        bgColor: "bg-gray-100",
+        textColor: "text-gray-700",
+        icon: Activity,
       };
   }
 }
 
-function formatThaiDate(dateString: string) {
-  const date = new Date(dateString);
-  const thaiMonths = [
-    "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
-    "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."
-  ];
-  const day = date.getDate();
-  const month = thaiMonths[date.getMonth()];
-  const year = date.getFullYear() + 543;
-  return `${day} ${month} ${year}`;
+function formatThaiDate(date: Date) {
+  return format(date, "d MMMM yyyy", { locale: th });
 }
 
 export function HistoryPage() {
   const navigate = useNavigate();
-  const [selectedMonth, setSelectedMonth] = useState("all");
+  const [currentMonth, setCurrentMonth] = useState(new Date()); 
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
-  const filteredHistory = useMemo(() => {
-    if (selectedMonth === "all") {
-      return mockHistory;
-    }
-    return mockHistory.filter(record => {
-      const recordMonth = new Date(record.date).getMonth() + 1;
-      return recordMonth.toString() === selectedMonth;
-    });
-  }, [selectedMonth]);
+  // Generate calendar days
+  const calendarDays = useMemo(() => {
+    const start = startOfWeek(startOfMonth(currentMonth), { weekStartsOn: 0 }); // Sunday start
+    const end = endOfWeek(endOfMonth(currentMonth), { weekStartsOn: 0 });
+    return eachDayOfInterval({ start, end });
+  }, [currentMonth]);
+
+  // Get events for a specific date
+  const getDataForDate = (date: Date) => {
+    const dateStr = format(date, "yyyy-MM-dd");
+    return mockData.find(d => d.date === dateStr);
+  };
+
+  const selectedData = getDataForDate(selectedDate);
+
+  const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
+  const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-white to-muted/30 pb-24 md:pb-8">
+    <div className="min-h-screen bg-[#E8F5EC] pb-24 md:pb-8 font-sans">
       {/* Header */}
-      <div className="bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 text-white p-6 md:p-10 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
-        <div className="relative z-10 max-w-4xl mx-auto">
-          <button
-            onClick={() => navigate("/patient/dashboard")}
-            className="flex items-center gap-2 text-white/80 hover:text-white mb-4 transition-colors group"
-          >
-            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-            <span>กลับ</span>
-          </button>
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold">ประวัติการตรวจ</h1>
-              <p className="text-white/80 mt-1">ดูประวัติค่า INR ย้อนหลัง</p>
+      <div className="bg-[#0F6B3A] text-white p-6 pt-8 pb-12 relative overflow-hidden rounded-b-[2.5rem] shadow-xl z-10">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+        
+        <div className="relative z-10 max-w-md mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <button
+              onClick={() => navigate("/patient/dashboard")}
+              className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full hover:bg-white/20 transition-all text-sm font-medium active:scale-95"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>กลับหน้าหลัก</span>
+            </button>
+            <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center shadow-lg border border-white/10">
+              <CalendarIcon className="w-5 h-5 text-white" />
             </div>
           </div>
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <h1 className="text-2xl md:text-3xl font-bold mb-2 tracking-tight">ปฏิทินสุขภาพ</h1>
+            <p className="text-emerald-100 text-sm md:text-base opacity-90 font-light">ติดตามประวัติผลเลือดและนัดหมายของคุณ</p>
+          </motion.div>
         </div>
       </div>
 
-      <div className="p-4 md:p-8 max-w-4xl mx-auto -mt-8 relative z-20">
-        {/* Filter Section */}
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-4 mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Filter className="w-5 h-5 text-primary" />
+      <div className="max-w-md mx-auto px-4 -mt-10 relative z-20 space-y-6">
+        
+        {/* Calendar Card */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+          className="bg-white rounded-3xl shadow-xl border border-white/50 overflow-hidden backdrop-blur-sm"
+        >
+          {/* Calendar Header */}
+          <div className="p-4 border-b border-slate-50 flex items-center justify-between bg-white/80 backdrop-blur-sm">
+            <h2 className="text-lg font-bold text-[#0F6B3A] ml-2">
+              {format(currentMonth, "MMMM yyyy", { locale: th })}
+            </h2>
+            <div className="flex items-center gap-1">
+              <button onClick={prevMonth} className="p-2 hover:bg-[#E8F5EC] rounded-full transition-colors text-[#0F6B3A]">
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button onClick={() => {
+                const today = new Date();
+                setCurrentMonth(today);
+                setSelectedDate(today);
+              }} className="px-3 py-1 text-xs font-medium bg-[#E8F5EC] text-[#0F6B3A] rounded-full hover:bg-[#d1eadd] transition-colors border border-[#0F6B3A]/20">
+                วันนี้
+              </button>
+              <button onClick={nextMonth} className="p-2 hover:bg-[#E8F5EC] rounded-full transition-colors text-[#0F6B3A]">
+                <ChevronRight className="w-5 h-5" />
+              </button>
             </div>
-            <label htmlFor="month-filter" className="font-semibold text-foreground">
-              กรองตามเดือน:
-            </label>
-            <select
-              id="month-filter"
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              className="flex-1 md:flex-none px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-primary bg-white transition-all font-medium"
-            >
-              <option value="all">ทั้งหมด</option>
-              <option value="3">มีนาคม 2567</option>
-              <option value="2">กุมภาพันธ์ 2567</option>
-              <option value="1">มกราคม 2567</option>
-            </select>
           </div>
-        </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-6">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Calendar className="w-5 h-5 text-primary" />
-              </div>
-              <p className="text-sm text-muted-foreground">จำนวนครั้งทั้งหมด</p>
+          {/* Calendar Grid */}
+          <div className="p-4 pt-2 bg-white">
+            <div className="grid grid-cols-7 mb-2">
+              {["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"].map((day, i) => (
+                <div key={i} className="text-center text-xs font-medium text-slate-400 py-2">
+                  {day}
+                </div>
+              ))}
             </div>
-            <p className="text-4xl font-bold text-primary">{filteredHistory.length}</p>
-          </div>
-          <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-6">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-secondary" />
-              </div>
-              <p className="text-sm text-muted-foreground">ค่าเฉลี่ย</p>
-            </div>
-            <p className="text-4xl font-bold text-secondary">
-              {(filteredHistory.reduce((acc, r) => acc + r.value, 0) / filteredHistory.length).toFixed(1)}
-            </p>
-          </div>
-          <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-6">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                <Award className="w-5 h-5 text-emerald-500" />
-              </div>
-              <p className="text-sm text-muted-foreground">ปลอดภัย</p>
-            </div>
-            <p className="text-4xl font-bold text-emerald-500">
-              {filteredHistory.filter(r => r.status === "safe").length}
-            </p>
-          </div>
-        </div>
-
-        {/* History List */}
-        <div className="space-y-4">
-          {filteredHistory.map((record) => {
-            const statusInfo = getStatusInfo(record.status);
-            return (
-              <div
-                key={record.id}
-                className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-5 md:p-6 hover:shadow-2xl transition-all relative overflow-hidden group"
-              >
-                <div className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl opacity-0 group-hover:opacity-10 transition-opacity" style={{ background: statusInfo.gradient }}></div>
+            <div className="grid grid-cols-7 gap-1">
+              {calendarDays.map((date, i) => {
+                const data = getDataForDate(date);
+                const isSelected = isSameDay(date, selectedDate);
+                const isCurrentMonth = isSameMonth(date, currentMonth);
+                const isTodayDate = isToday(date);
                 
-                <div className="relative z-10 flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Calendar className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground font-medium">{formatThaiDate(record.date)}</span>
+                return (
+                  <button
+                    key={i}
+                    onClick={() => setSelectedDate(date)}
+                    className={`
+                      relative h-10 w-10 mx-auto rounded-full flex items-center justify-center transition-all duration-200
+                      ${!isCurrentMonth ? "text-slate-300" : "text-slate-700"}
+                      ${isSelected ? "bg-white ring-2 ring-[#0F6B3A] shadow-lg scale-110 z-10 font-bold text-[#0F6B3A]" : "hover:bg-[#E8F5EC]"}
+                      ${isTodayDate && !isSelected ? "bg-[#E8F5EC] text-[#0F6B3A] font-semibold" : ""}
+                    `}
+                  >
+                    <span className="text-sm">{format(date, "d")}</span>
+                    
+                    {/* Indicators */}
+                    <div className="absolute bottom-1 flex gap-0.5 justify-center">
+                      {data?.inr && (
+                        <div 
+                          className="w-1 h-1 rounded-full"
+                          style={{ backgroundColor: getStatusInfo(data.inr.status).color }}
+                        />
+                      )}
+                      {data?.appointment && (
+                        <div className="w-1 h-1 rounded-full bg-blue-500" />
+                      )}
+                      {data?.medication?.status === 'missed' && (
+                         <div className="w-1 h-1 rounded-full bg-red-400" />
+                      )}
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wider">ค่า INR</p>
-                        <p className="text-4xl md:text-5xl font-bold" style={{ 
-                          background: statusInfo.gradient,
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
-                          backgroundClip: 'text'
-                        }}>
-                          {record.value.toFixed(1)}
-                        </p>
-                      </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Detail Section */}
+        <AnimatePresence mode="wait">
+          <motion.div 
+            key={selectedDate.toISOString()}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-4"
+          >
+            <div className="flex items-center gap-2 px-2">
+               <Clock className="w-5 h-5 text-[#0F6B3A]" />
+               <h3 className="text-lg font-bold text-[#0F6B3A]">
+                 รายละเอียด {formatThaiDate(selectedDate)}
+               </h3>
+            </div>
+
+            {!selectedData && (
+               <motion.div 
+                 initial={{ opacity: 0, scale: 0.95 }}
+                 animate={{ opacity: 1, scale: 1 }}
+                 className="bg-white/80 backdrop-blur-md rounded-3xl p-8 text-center shadow-sm border border-white/50"
+               >
+                  <div className="w-16 h-16 bg-[#E8F5EC] rounded-full flex items-center justify-center mx-auto mb-4 border border-[#0F6B3A]/10">
+                    <ClipboardList className="w-8 h-8 text-[#0F6B3A]/40" />
+                  </div>
+                  <p className="text-slate-500 font-medium">ไม่มีบันทึกข้อมูลสำหรับวันนี้</p>
+                  <p className="text-xs text-slate-400 mt-1">ข้อมูลจะปรากฏเมื่อโรงพยาบาลบันทึกเข้าระบบ</p>
+               </motion.div>
+            )}
+
+            {/* Medication Card */}
+            {selectedData?.medication && (
+              <motion.div 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                className={`rounded-3xl p-5 border relative overflow-hidden shadow-sm transition-all bg-white/90 backdrop-blur-md
+                  ${selectedData.medication.status === 'missed' ? 'border-red-100 ring-1 ring-red-100' : 
+                    selectedData.medication.status === 'taken' ? 'border-[#0F6B3A]/20 ring-1 ring-[#0F6B3A]/10' : 'border-slate-100'}
+                `}
+              >
+                <div className="flex justify-between items-start relative z-10">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shadow-sm
+                      ${selectedData.medication.status === 'missed' ? 'bg-red-50 text-red-600' : 
+                        selectedData.medication.status === 'taken' ? 'bg-[#E8F5EC] text-[#0F6B3A]' : 'bg-slate-50 text-slate-500'}
+                    `}>
+                      <Pill className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-slate-800">การรับประทานยา</h4>
+                      <p className="text-sm text-slate-500">Warfarin {selectedData.medication.dose}</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="inline-block px-5 py-3 rounded-2xl font-bold text-sm text-white shadow-lg" style={{ background: statusInfo.gradient }}>
-                      {statusInfo.label}
+                  <div className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm
+                    ${selectedData.medication.status === 'missed' ? 'bg-red-100 text-red-700' : 
+                      selectedData.medication.status === 'taken' ? 'bg-[#0F6B3A]/10 text-[#0F6B3A]' : 'bg-slate-100 text-slate-600'}
+                  `}>
+                    {selectedData.medication.status === 'taken' ? 'รับประทานแล้ว' : 
+                     selectedData.medication.status === 'missed' ? 'ลืมรับประทาน' : 'รอรับประทาน'}
+                  </div>
+                </div>
+                
+                {selectedData.medication.time && (
+                  <div className="mt-4 flex items-center gap-2 text-sm text-slate-600 pl-1 border-t border-slate-100 pt-3">
+                    <Clock className="w-4 h-4 text-slate-400" />
+                    <span>เวลาที่ทาน: <span className="font-medium text-slate-700">{selectedData.medication.time} น.</span></span>
+                  </div>
+                )}
+
+                 {selectedData.medication.note && (
+                  <div className="mt-3 bg-red-50 p-3 rounded-xl text-sm text-red-700 border border-red-100 flex items-start gap-2">
+                     <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                     <p>{selectedData.medication.note}</p>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {/* Lab Result Card */}
+            {selectedData?.inr && (
+              <motion.div 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="bg-white/90 backdrop-blur-md rounded-3xl p-5 border border-slate-100 shadow-sm relative overflow-hidden group"
+              >
+                 <div className={`absolute top-0 right-0 w-32 h-32 rounded-bl-full opacity-5 transition-colors blur-xl pointer-events-none
+                   ${selectedData.inr.status === 'safe' ? 'bg-[#0F6B3A]' : 
+                     selectedData.inr.status === 'monitor' ? 'bg-amber-500' : 'bg-red-500'}
+                 `}></div>
+                 
+                 <div className="flex justify-between items-start mb-4 relative z-10">
+                   <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-sm">
+                        <Activity className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-slate-800">ผลการตรวจเลือด</h4>
+                        <p className="text-xs text-slate-500">อัปเดตจากห้องปฏิบัติการ</p>
+                      </div>
+                   </div>
+                   <span className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm ${getStatusInfo(selectedData.inr.status).bgColor} ${getStatusInfo(selectedData.inr.status).textColor}`}>
+                      {getStatusInfo(selectedData.inr.status).label}
+                   </span>
+                 </div>
+
+                 <div className="flex items-end gap-3 mb-4 pl-1">
+                    <div className="text-5xl font-bold text-slate-800 tracking-tighter">
+                      {selectedData.inr.value}
+                    </div>
+                    <div className="pb-2 text-sm font-medium text-slate-400">ค่า INR</div>
+                 </div>
+
+                 {selectedData.inr.note && (
+                   <div className="bg-slate-50 rounded-xl p-3 text-sm text-slate-600 border border-slate-100">
+                      <span className="font-bold text-slate-700 block mb-1 text-xs uppercase tracking-wider">ผลวินิจฉัย</span>
+                      {selectedData.inr.note}
+                   </div>
+                 )}
+              </motion.div>
+            )}
+
+            {/* Appointment Card */}
+            {selectedData?.appointment && (
+              <motion.div 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="bg-gradient-to-br from-blue-50 to-indigo-50/50 rounded-3xl p-5 border border-blue-100/50 shadow-sm relative backdrop-blur-md"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-2xl bg-white text-blue-600 flex items-center justify-center shadow-sm border border-blue-50">
+                    <CalendarIcon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-blue-900">นัดหมายแพทย์</h4>
+                    <p className="text-xs text-blue-600/80">{selectedData.appointment.type}</p>
+                  </div>
+                </div>
+
+                <div className="bg-white/60 rounded-2xl p-4 space-y-3 border border-white/60 shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <Clock className="w-4 h-4 text-blue-500 mt-0.5" />
+                    <div>
+                      <p className="text-xs text-blue-400 font-medium uppercase">เวลา</p>
+                      <p className="text-blue-900 font-medium">{selectedData.appointment.time} น.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                     <MapPin className="w-4 h-4 text-blue-500 mt-0.5" />
+                     <div>
+                      <p className="text-xs text-blue-400 font-medium uppercase">สถานที่</p>
+                      <p className="text-blue-900 font-medium">{selectedData.appointment.location}</p>
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
 
-        {filteredHistory.length === 0 && (
-          <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-12 text-center">
-            <p className="text-muted-foreground">ไม่พบข้อมูลในช่วงเวลาที่เลือก</p>
-          </div>
-        )}
+                {selectedData.appointment.note && (
+                  <div className="mt-3 text-xs text-blue-600/80 px-2 flex items-start gap-1">
+                    <span className="text-blue-400">*</span>
+                    {selectedData.appointment.note}
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {/* Doctor Note (General) */}
+            {selectedData?.doctorNote && (
+              <motion.div 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+                className="bg-amber-50/80 backdrop-blur-md rounded-3xl p-5 border border-amber-100 shadow-sm"
+              >
+                 <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+                      <FileText className="w-4 h-4" />
+                    </div>
+                    <h4 className="font-bold text-amber-900">คำแนะนำแพทย์</h4>
+                 </div>
+                 <p className="text-sm text-amber-800 leading-relaxed pl-11">
+                   "{selectedData.doctorNote}"
+                 </p>
+              </motion.div>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );
