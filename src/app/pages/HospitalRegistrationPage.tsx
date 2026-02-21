@@ -46,7 +46,7 @@ export function HospitalRegistrationPage() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 -mt-8 relative z-20">
+      <div className="mt-8 max-w-4xl mx-auto px-4 -mt-8 relative z-20">
         <div className="bg-white rounded-3xl shadow-xl p-6 md:p-10 border border-slate-100">
           
           {/* Role Selection Tabs */}
