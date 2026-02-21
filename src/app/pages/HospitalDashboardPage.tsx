@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router";
-import { Search, AlertCircle, TrendingUp, Users, Filter, Eye } from "lucide-react";
+import { Search, AlertCircle, TrendingUp, Users, Filter, Eye, UserPlus } from "lucide-react";
 import { Input } from "../components/ui/input";
+import { Button } from "../components/ui/button";
 
 // Mock patient data
 const mockPatients = [
@@ -73,9 +74,18 @@ export function HospitalDashboardPage() {
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
         <div className="relative z-10 max-w-7xl mx-auto">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold mb-2">แดชบอร์ดเจ้าหน้าที่</h1>
-            <p className="text-white/80">จัดการและติดตามผู้ป่วย Warfarin</p>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold mb-2">แดชบอร์ดเจ้าหน้าที่</h1>
+              <p className="text-white/80">จัดการและติดตามผู้ป่วย Warfarin</p>
+            </div>
+            <Button 
+              onClick={() => navigate("/hospital/register")}
+              className="bg-white text-emerald-600 hover:bg-emerald-50 shadow-lg font-bold gap-2"
+            >
+              <UserPlus className="w-5 h-5" />
+              ลงทะเบียนสมาชิกใหม่
+            </Button>
           </div>
         </div>
       </div>

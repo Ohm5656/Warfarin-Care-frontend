@@ -2,8 +2,10 @@ import { useState, useMemo } from "react";
 import { ArrowLeft, Calendar as CalendarIcon, Check, X, Pill } from "lucide-react";
 import { useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
+import { ImageWithFallback } from "../components/figma/ImageWithFallback";
+import { motion } from "motion/react";
 
-// Mock dose data - using February 2026 dates
+// Mock dose data - updated to February 21, 2026 as current date
 const mockDoseSchedule = [
   { date: "2026-02-01", dose: "5mg", taken: true },
   { date: "2026-02-02", dose: "5mg", taken: true },
@@ -20,9 +22,53 @@ const mockDoseSchedule = [
   { date: "2026-02-13", dose: "5mg", taken: true },
   { date: "2026-02-14", dose: "5mg", taken: true },
   { date: "2026-02-15", dose: "5mg", taken: true },
-  { date: "2026-02-16", dose: "5mg", taken: false }, // Today - not taken yet
-  { date: "2026-02-17", dose: "5mg", taken: false }, // Future
-  { date: "2026-02-18", dose: "5mg", taken: false }, // Future
+  { date: "2026-02-16", dose: "5mg", taken: true },
+  { date: "2026-02-17", dose: "5mg", taken: true },
+  { date: "2026-02-18", dose: "5mg", taken: true },
+  { date: "2026-02-19", dose: "5mg", taken: true },
+  { date: "2026-02-20", dose: "5mg", taken: true },
+  { date: "2026-02-21", dose: "3mg", taken: false }, // Today - 3.0 mg (1 pink pill + half)
+  { date: "2026-02-22", dose: "5mg", taken: false }, // Future
+  { date: "2026-02-23", dose: "5mg", taken: false }, // Future
+];
+
+// Warfarin pill information with colors and images
+const warfarinPills = [
+  { 
+    color: "สีขาว", 
+    dose: "1 mg", 
+    bgColor: "bg-white",
+    borderColor: "border-gray-200",
+    image: "/picture/1mg.png"
+  },
+  {
+    color: "สีส้ม", 
+    dose: "2 mg", 
+    bgColor: "bg-orange-50",
+    borderColor: "border-orange-200",
+    image: "/picture/2mg.png"
+  },
+  { 
+    color: "สีฟ้า", 
+    dose: "3 mg", 
+    bgColor: "bg-blue-50",
+    borderColor: "border-blue-200",
+    image: "/picture/3mg.png"
+  },
+  { 
+    color: "สีเหลือง", 
+    dose: "4 mg", 
+    bgColor: "bg-yellow-50",
+    borderColor: "border-yellow-200",
+    image: "/picture/4mg.png"
+  },
+  { 
+    color: "สีชมพู", 
+    dose: "5 mg", 
+    bgColor: "bg-pink-50",
+    borderColor: "border-pink-200",
+    image: "/picture/5mg.png"
+  },
 ];
 
 function formatThaiDate(dateString: string) {
@@ -120,6 +166,50 @@ export function DoseCalendarPage() {
             <p className="text-4xl font-bold text-primary">5 mg</p>
           </div>
         </div>
+
+        {/* Today's Medication Detail Card */}
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="bg-white rounded-3xl p-6 md:p-8 shadow-xl border border-emerald-50 overflow-hidden relative"
+        >
+          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full blur-3xl -z-10"></div>
+          
+          {/* Date Header */}
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100 text-emerald-800 text-sm font-semibold mb-4">
+            <CalendarIcon className="w-4 h-4" />
+            วันเสาร์ที่ 21 กุมภาพันธ์ 2569
+          </div>
+
+          {/* Dose Information */}
+          <h2 className="text-xl font-bold text-gray-800 mb-2">ยา Warfarin วันนี้</h2>
+          <div className="text-4xl font-bold text-emerald-600 mb-6">3.0 mg</div>
+
+          {/* Pills to Take - REMOVED */}
+
+          {/* Warfarin Pills Reference Guide */}
+          <div className="border-t border-gray-100 pt-6">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">ยาวาร์ฟาริน (Warfarin)</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {warfarinPills.map((pill, index) => (
+                <div 
+                  key={index}
+                  className={`${pill.bgColor} ${pill.borderColor} border-2 rounded-xl p-3 text-center transition-all hover:shadow-md`}
+                >
+                  <div className="w-full aspect-square rounded-lg overflow-hidden mb-2 shadow-sm">
+                    <ImageWithFallback 
+                      src={pill.image}
+                      alt={`${pill.color} pill`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <p className="font-bold text-sm text-gray-700">{pill.color}</p>
+                  <p className="text-xs text-gray-600 font-medium">{pill.dose}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
 
         {/* Calendar View */}
         <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 md:p-8">

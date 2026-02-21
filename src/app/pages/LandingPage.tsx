@@ -305,9 +305,6 @@ export function LandingPage() {
               </span>
             </div>
             <div className="text-center md:text-left">
-              <p className="text-sm text-muted-foreground">
-                กระทรวงสาธารณสุข | Ministry of Public Health
-              </p>
               <p className="text-xs text-muted-foreground mt-1">
                 © 2024 Coaguard. All rights reserved.
               </p>

@@ -1,6 +1,7 @@
 import { Outlet, Navigate } from "react-router";
 import { PatientSidebar } from "./PatientSidebar";
 import { PatientBottomNav } from "./PatientBottomNav";
+import { SOSButton } from "./SOSButton";
 
 export function PatientRoot() {
   const isLoggedIn = localStorage.getItem("warfarin_logged_in") === "true";
@@ -29,6 +30,9 @@ export function PatientRoot() {
 
       {/* Mobile Bottom Navigation */}
       <PatientBottomNav />
+
+      {/* Global SOS Button */}
+      <SOSButton />
     </div>
   );
 }

@@ -128,9 +128,8 @@ export function RoleSelectionPage() {
         </div>
 
         {/* Footer Note */}
-        <div className="mt-12 text-center text-sm text-muted-foreground">
-          <p className="mb-2">🔒 ระบบปลอดภัยตามมาตรฐานการแพทย์</p>
-          <p>กระทรวงสาธารณสุข | Ministry of Public Health</p>
+        <div className="mt-20 text-center text-sm text-muted-foreground">
+
         </div>
       </div>
     </div>

@@ -11,6 +11,8 @@ import { PatientDashboardPage } from "./pages/PatientDashboardPage";
 import { DoseCalendarPage } from "./pages/DoseCalendarPage";
 import { HistoryPage } from "./pages/HistoryPage";
 import { RiskAlertPage } from "./pages/RiskAlertPage";
+import { SafetyPage } from "./pages/SafetyPage";
+import { HospitalRegistrationPage } from "./pages/HospitalRegistrationPage";
 
 export const router = createBrowserRouter([
   {
@@ -36,6 +38,7 @@ export const router = createBrowserRouter([
       { path: "dashboard", Component: HospitalDashboardPage },
       { path: "patient/:id", Component: PatientDetailPage },
       { path: "analytics", Component: AnalyticsPage },
+      { path: "register", Component: HospitalRegistrationPage },
     ],
   },
   {
@@ -50,6 +53,7 @@ export const router = createBrowserRouter([
       { path: "doses", Component: DoseCalendarPage },
       { path: "history", Component: HistoryPage },
       { path: "risk", Component: RiskAlertPage },
+      { path: "safety", Component: SafetyPage },
     ],
   },
 ]);

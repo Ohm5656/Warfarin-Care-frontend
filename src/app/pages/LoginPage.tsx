@@ -130,9 +130,8 @@ export function LoginPage() {
           </div>
         </div>
 
-        <div className="mt-8 text-center text-sm text-muted-foreground space-y-1">
-          <p className="font-medium">กระทรวงสาธารณสุข</p>
-          <p>Ministry of Public Health</p>
+        <div className="mt-12 text-center text-sm text-muted-foreground space-y-1">
+
         </div>
       </div>
     </div>
