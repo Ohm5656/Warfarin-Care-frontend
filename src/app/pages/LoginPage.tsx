@@ -59,7 +59,7 @@ export function LoginPage() {
             </div>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">
-            Coaguard
+            WafarinCare
           </h1>
           <p className="text-muted-foreground text-lg">
             {isHospital ? 'เข้าสู่ระบบเจ้าหน้าที่' : 'เข้าสู่ระบบผู้ป่วย'}

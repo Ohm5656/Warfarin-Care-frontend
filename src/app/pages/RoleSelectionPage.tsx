@@ -31,7 +31,7 @@ export function RoleSelectionPage() {
             <Heart className="w-8 h-8 text-white" fill="currentColor" />
           </div>
           <h1 className="text-3xl md:text-4xl font-bold mb-2">
-            เข้าสู่ระบบ <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Coaguard</span>
+            เข้าสู่ระบบ <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">WafarinCare</span>
           </h1>
           <p className="text-lg text-muted-foreground">เลือกประเภทผู้ใช้งาน</p>
         </div>

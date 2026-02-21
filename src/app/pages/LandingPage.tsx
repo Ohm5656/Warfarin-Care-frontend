@@ -18,7 +18,7 @@ export function LandingPage() {
                 <Heart className="w-5 h-5 text-white" fill="currentColor" />
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                Coaguard
+                WafarinCare
               </span>
             </div>
             <Button
@@ -111,7 +111,7 @@ export function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">ปัญหาที่พบบ่อยในการใช้ Warfarin</h2>
-            <p className="text-lg text-muted-foreground">ความท้าทายที่ Coaguard ช่วยแก้ไข</p>
+            <p className="text-lg text-muted-foreground">ความท้าทายที่ WafarinCare ช่วยแก้ไข</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -280,7 +280,7 @@ export function LandingPage() {
             พร้อมเริ่มต้นแล้วหรือยัง?
           </h2>
           <p className="text-xl text-white/90 mb-8">
-            เข้าร่วมกับโรงพยาบาลชั้นนำที่ใช้ Coaguard ในการดูแลผู้ป่วย
+            เข้าร่วมกับโรงพยาบาลชั้นนำที่ใช้ WafarinCare ในการดูแลผู้ป่วย
           </p>
           <Button
             onClick={() => navigate("/role-selection")}
@@ -301,12 +301,12 @@ export function LandingPage() {
                 <Heart className="w-4 h-4 text-white" fill="currentColor" />
               </div>
               <span className="font-bold text-lg bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                Coaguard
+                WafarinCare
               </span>
             </div>
             <div className="text-center md:text-left">
               <p className="text-xs text-muted-foreground mt-1">
-                © 2024 Coaguard. All rights reserved.
+                © 2024 WafarinCare. All rights reserved.
               </p>
             </div>
           </div>
@@ -331,7 +331,7 @@ export function LandingPage() {
                     <Play className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl md:text-3xl font-bold">วิธีใช้งาน Coaguard</h2>
+                    <h2 className="text-2xl md:text-3xl font-bold">วิธีใช้งาน WafarinCare</h2>
                     <p className="text-white/80 text-sm mt-1">คู่มือเริ่มต้นสำหรับผู้ใช้งานทุกประเภท</p>
                   </div>
                 </div>
