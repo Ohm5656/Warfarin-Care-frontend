@@ -69,3 +69,9 @@ Level 3 – Web Push via Service Worker
 ```bash
 npm install
 npm run dev
+```
+
+## 🌐 Build
+
+```bash
+npm run build
