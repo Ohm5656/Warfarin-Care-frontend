@@ -28,7 +28,7 @@ export function HospitalSidebar() {
             <Heart className="w-7 h-7 text-white" fill="currentColor" />
           </div>
           <div>
-            <h1 className="text-xl font-bold">Coaguard</h1>
+            <h1 className="text-xl font-bold">WafarinCare</h1>
             <p className="text-xs text-white/70">เจ้าหน้าที่โรงพยาบาล</p>
           </div>
         </div>
